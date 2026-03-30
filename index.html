@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Manrope", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"],
+          },
+          boxShadow: {
+            glow: "0 24px 80px rgba(15, 23, 42, 0.14)",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(110, 231, 216, 0.34), transparent 28%),
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.18), transparent 20%),
+        linear-gradient(160deg, #f8fafc 0%, #eff6ff 45%, #f8fafc 100%);
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.66);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+    }
+    .soft-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.11) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.11) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .document-stage { transform-origin: top center; transition: transform 180ms ease; }
+    .map-box {
+      position: absolute;
+      border: 1px dashed rgba(45, 212, 191, 0.55);
+      background: rgba(204, 251, 241, 0.16);
+      border-radius: 14px;
+      opacity: 0.45;
+      transition: all 180ms ease;
+      pointer-events: none;
+    }
+    .map-box.active {
+      opacity: 1;
+      background: rgba(45, 212, 191, 0.18);
+      box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.14);
+      border-color: rgba(13, 148, 136, 0.85);
+    }
+    .status-chip[data-state="draft"] { background: rgba(148, 163, 184, 0.14); color: #334155; }
+    .status-chip[data-state="pending"] { background: rgba(251, 191, 36, 0.18); color: #92400e; }
+    .status-chip[data-state="paid"] { background: rgba(34, 197, 94, 0.16); color: #166534; }
+    .field-shell:focus-within {
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14);
+      border-color: rgba(13, 148, 136, 0.54);
+    }
+    .field-error {
+      border-color: rgba(239, 68, 68, 0.48) !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 10px; height: 10px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.38);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-900 antialiased">
+  <div class="mx-auto max-w-[1680px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+    <div class="mb-4 flex items-center justify-between gap-4 rounded-[28px] border border-white/60 bg-white/55 px-5 py-4 shadow-glow backdrop-blur-xl sm:px-6">
+      <div>
+        <p class="font-display text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Invoice Editor</p>
+        <p class="mt-1 text-sm text-slate-500">Glassmorphism workspace with live preview, field mapping, and inline invoice calculations.</p>
+      </div>
+      <div class="hidden items-center gap-2 md:flex">
+        <button id="validateButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white">
+          <i data-lucide="badge-check" class="h-4 w-4"></i>
+          Validate
+        </button>
+        <button class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+          <i data-lucide="send" class="h-4 w-4"></i>
+          Send Invoice
+        </button>
+      </div>
+    </div>
+
+    <main class="grid gap-5 lg:grid-cols-[minmax(380px,0.92fr)_minmax(540px,1.08fr)]">
+      <section id="previewSheet" class="pointer-events-none fixed inset-0 z-40 flex translate-y-full flex-col bg-slate-950/28 p-3 opacity-0 transition duration-300 lg:pointer-events-auto lg:static lg:z-auto lg:block lg:translate-y-0 lg:bg-transparent lg:p-0 lg:opacity-100" aria-hidden="true">
+        <div id="previewBackdrop" class="absolute inset-0 lg:hidden"></div>
+        <div class="relative mt-auto flex max-h-[88vh] flex-col overflow-hidden rounded-[30px] glass lg:sticky lg:top-6 lg:mt-0 lg:max-h-[calc(100vh-3rem)]">
+          <div class="flex items-center justify-between gap-3 border-b border-slate-200/70 px-4 py-4 sm:px-5">
+            <div>
+              <p class="font-display text-lg font-bold tracking-tight">Document Preview</p>
+              <p class="text-xs text-slate-500">Sticky PDF/Image viewer with mapped field highlights.</p>
+            </div>
+            <button id="closePreviewButton" class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 text-slate-600 lg:hidden">
+              <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-4 py-3 sm:px-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
+                <i data-lucide="file-up" class="h-4 w-4"></i>
+                Upload PDF/Image
+                <input id="documentInput" type="file" accept="application/pdf,image/*" class="hidden" />
+              </label>
+              <button id="resetDocumentButton" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/85 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white">
+                <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                Mock Invoice
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="inline-flex items-center gap-1 rounded-2xl border border-slate-200/80 bg-white/85 p-1">
+                <button data-zoom="-0.1" class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100"><i data-lucide="zoom-out" class="h-4 w-4"></i></button>
+                <button data-zoom="0.1" class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100"><i data-lucide="zoom-in" class="h-4 w-4"></i></button>
+                <button id="rotateButton" class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100"><i data-lucide="rotate-cw" class="h-4 w-4"></i></button>
+              </div>
+              <div class="rounded-2xl border border-slate-200/80 bg-white/85 px-3 py-2 text-sm font-semibold text-slate-600"><span id="zoomLabel">100%</span></div>
+            </div>
+          </div>
+
+          <div class="soft-grid scrollbar-thin relative flex-1 overflow-auto px-3 py-4 sm:px-5 sm:py-5">
+            <div class="mx-auto flex min-h-full items-start justify-center">
+              <div id="documentStage" class="document-stage relative w-full max-w-[760px]">
+                <div id="mockViewer" class="relative mx-auto rounded-[28px] border border-white/70 bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 p-5 shadow-[0_30px_90px_rgba(15,23,42,0.18)]">
+                  <div class="mx-auto aspect-[1/1.414] w-full max-w-[700px] rounded-[24px] bg-white p-6 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.16)] sm:p-8">
+                    <div class="relative h-full overflow-hidden rounded-[20px] border border-slate-200/80 bg-white">
+                      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(110,231,216,0.18),transparent_24%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,1))]"></div>
+                      <div class="relative z-10 flex h-full flex-col px-6 py-6 sm:px-8 sm:py-7">
+                        <div class="mb-8 flex items-start justify-between gap-4">
+                          <div>
+                            <p class="font-display text-3xl font-bold tracking-tight text-slate-900">Invoice</p>
+                            <p class="mt-2 text-sm text-slate-500">Design Forge Studio</p>
+                            <p class="text-xs text-slate-400">18 Market Line, Bengaluru, India</p>
+                          </div>
+                          <div class="text-right">
+                            <p id="previewStatus" class="status-chip inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]" data-state="draft">Draft</p>
+                            <p id="previewInvoiceNumber" class="mt-4 font-display text-lg font-bold text-slate-900">INV-20260330-1042</p>
+                            <p class="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">Invoice Number</p>
+                          </div>
+                        </div>
+                        <div class="mb-8 grid grid-cols-2 gap-6">
+                          <div>
+                            <p class="mb-3 text-xs uppercase tracking-[0.24em] text-slate-400">Bill To</p>
+                            <p id="previewVendorName" class="text-base font-semibold text-slate-900">Northwind Logistics</p>
+                            <p id="previewVendorAddress" class="mt-2 text-sm leading-6 text-slate-500">221 Harbor Avenue<br />Seattle, WA 98121</p>
+                          </div>
+                          <div class="grid gap-4 rounded-2xl bg-slate-50/90 p-4">
+                            <div class="flex items-center justify-between text-sm"><span class="text-slate-500">Issue Date</span><span id="previewIssueDate" class="font-semibold text-slate-900">Mar 30, 2026</span></div>
+                            <div class="flex items-center justify-between text-sm"><span class="text-slate-500">Due Date</span><span id="previewDueDate" class="font-semibold text-slate-900">Apr 12, 2026</span></div>
+                            <div class="flex items-center justify-between text-sm"><span class="text-slate-500">Currency</span><span id="previewCurrency" class="font-semibold text-slate-900">USD</span></div>
+                          </div>
+                        </div>
+                        <div class="mb-6 overflow-hidden rounded-[18px] border border-slate-200/80">
+                          <table class="w-full text-left">
+                            <thead class="bg-slate-50">
+                              <tr class="text-xs uppercase tracking-[0.2em] text-slate-400">
+                                <th class="px-4 py-3">Description</th>
+                                <th class="px-4 py-3 text-right">Qty</th>
+                                <th class="px-4 py-3 text-right">Price</th>
+                                <th class="px-4 py-3 text-right">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody id="previewLineItems" class="divide-y divide-slate-100 bg-white text-sm"></tbody>
+                          </table>
+                        </div>
+                        <div class="mt-auto grid gap-5 sm:grid-cols-[1fr_220px]">
+                          <div class="rounded-[20px] bg-slate-50/85 p-4">
+                            <p class="mb-2 text-xs uppercase tracking-[0.22em] text-slate-400">Notes & Terms</p>
+                            <p id="previewNotes" class="text-sm leading-6 text-slate-500">Payment due within 14 days. Thank you for your business.</p>
+                          </div>
+                          <div class="rounded-[20px] border border-slate-200/80 bg-white p-4">
+                            <div class="space-y-3 text-sm">
+                              <div class="flex items-center justify-between"><span class="text-slate-500">Subtotal</span><span id="previewSubtotal" class="font-semibold text-slate-900">$0.00</span></div>
+                              <div class="flex items-center justify-between"><span class="text-slate-500">Tax</span><span id="previewTaxTotal" class="font-semibold text-slate-900">$0.00</span></div>
+                              <div class="flex items-center justify-between"><span class="text-slate-500">Discount</span><span id="previewDiscount" class="font-semibold text-slate-900">$0.00</span></div>
+                              <div class="h-px bg-slate-200"></div>
+                              <div class="flex items-center justify-between"><span class="font-display text-base font-bold text-slate-900">Grand Total</span><span id="previewGrandTotal" class="font-display text-lg font-bold text-slate-900">$0.00</span></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pointer-events-none absolute inset-0 z-20">
+                        <div class="map-box" data-map-box="invoiceNumber" style="left:67%; top:6%; width:23%; height:11%;"></div>
+                        <div class="map-box" data-map-box="vendor" style="left:7%; top:21%; width:32%; height:16%;"></div>
+                        <div class="map-box" data-map-box="issueDate" style="left:58%; top:23%; width:28%; height:6%;"></div>
+                        <div class="map-box" data-map-box="dueDate" style="left:58%; top:29%; width:28%; height:6%;"></div>
+                        <div class="map-box" data-map-box="currency" style="left:58%; top:35%; width:28%; height:6%;"></div>
+                        <div class="map-box" data-map-box="lineItems" style="left:7%; top:43%; width:86%; height:25%;"></div>
+                        <div class="map-box" data-map-box="notes" style="left:7%; top:76%; width:44%; height:12%;"></div>
+                        <div class="map-box" data-map-box="summary" style="left:59%; top:74%; width:27%; height:15%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="externalViewer" class="hidden overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.18)]">
+                  <iframe id="pdfFrame" class="hidden h-[780px] w-full bg-white" title="PDF preview"></iframe>
+                  <div class="relative flex min-h-[780px] items-center justify-center bg-slate-50 p-6">
+                    <img id="imageFrame" class="hidden max-h-[720px] w-auto rounded-2xl shadow-lg" alt="Invoice source" />
+                    <div class="pointer-events-none absolute inset-6 rounded-[26px] border border-dashed border-slate-200"></div>
+                    <div class="pointer-events-none absolute inset-0">
+                      <div class="map-box" data-map-box="invoiceNumber" style="left:64%; top:10%; width:24%; height:10%;"></div>
+                      <div class="map-box" data-map-box="vendor" style="left:8%; top:22%; width:32%; height:16%;"></div>
+                      <div class="map-box" data-map-box="issueDate" style="left:56%; top:24%; width:28%; height:7%;"></div>
+                      <div class="map-box" data-map-box="dueDate" style="left:56%; top:31%; width:28%; height:7%;"></div>
+                      <div class="map-box" data-map-box="currency" style="left:56%; top:38%; width:28%; height:7%;"></div>
+                      <div class="map-box" data-map-box="lineItems" style="left:8%; top:46%; width:84%; height:24%;"></div>
+                      <div class="map-box" data-map-box="notes" style="left:8%; top:76%; width:44%; height:11%;"></div>
+                      <div class="map-box" data-map-box="summary" style="left:60%; top:74%; width:26%; height:14%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="space-y-5">
+        <form id="invoiceForm" novalidate class="space-y-5">
+          <div class="glass rounded-[30px] p-5 sm:p-6">
+            <div class="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p class="font-display text-lg font-bold tracking-tight">Primary Metadata</p>
+                <p class="mt-1 text-sm text-slate-500">Core invoice fields with live preview sync and mapping cues.</p>
+              </div>
+              <span id="statusBadge" class="status-chip inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]" data-state="draft">Draft</span>
+            </div>
+            <div class="grid gap-4 xl:grid-cols-2">
+              <div class="space-y-2">
+                <label for="invoiceNumber" class="text-sm font-semibold text-slate-700">Invoice Number</label>
+                <div id="invoiceNumberShell" class="field-shell rounded-2xl border border-slate-200/80 bg-white/80 p-3 transition" data-map-target="invoiceNumber">
+                  <div class="flex items-center gap-3">
+                    <input id="invoiceNumber" type="text" class="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400" placeholder="INV-20260330-1042" />
+                    <label class="inline-flex shrink-0 items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <input id="autoGenerateInvoice" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
+                      Auto
+                    </label>
+                  </div>
+                </div>
+                <p id="invoiceNumberError" class="text-sm text-red-500"></p>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-slate-700">Status</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" class="statusOption rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-white" data-status="draft">Draft</button>
+                  <button type="button" class="statusOption rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-white" data-status="pending">Pending</button>
+                  <button type="button" class="statusOption rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-white" data-status="paid">Paid</button>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label for="issueDate" class="text-sm font-semibold text-slate-700">Issue Date</label>
+                <div id="issueDateShell" class="field-shell rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 transition" data-map-target="issueDate">
+                  <input id="issueDate" type="date" class="w-full bg-transparent text-sm text-slate-900 outline-none" />
+                </div>
+                <p id="issueDateError" class="text-sm text-red-500"></p>
+              </div>
+              <div class="space-y-2">
+                <label for="dueDate" class="text-sm font-semibold text-slate-700">Due Date</label>
+                <div id="dueDateShell" class="field-shell rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 transition" data-map-target="dueDate">
+                  <input id="dueDate" type="date" class="w-full bg-transparent text-sm text-slate-900 outline-none" />
+                </div>
+                <p id="dueDateError" class="text-sm text-red-500"></p>
+              </div>
+              <div class="space-y-2">
+                <label for="currency" class="text-sm font-semibold text-slate-700">Currency</label>
+                <div id="currencyShell" class="field-shell rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 transition" data-map-target="currency">
+                  <select id="currency" class="w-full bg-transparent text-sm text-slate-900 outline-none">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="AED">AED - UAE Dirham</option>
+                  </select>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-slate-700">Vendor Picker</label>
+                <div class="relative">
+                  <button id="vendorButton" type="button" class="field-shell flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-left transition" data-map-target="vendor">
+                    <div class="flex min-w-0 items-center gap-3">
+                      <span id="vendorAvatar" class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">NL</span>
+                      <span class="min-w-0">
+                        <span id="vendorLabel" class="block truncate text-sm font-semibold text-slate-900">Northwind Logistics</span>
+                        <span id="vendorAddressLabel" class="block truncate text-xs text-slate-500">221 Harbor Avenue, Seattle, WA 98121</span>
+                      </span>
+                    </div>
+                    <i data-lucide="chevrons-up-down" class="h-4 w-4 shrink-0 text-slate-500"></i>
+                  </button>
+                  <div id="vendorMenu" class="absolute left-0 top-[calc(100%+0.75rem)] z-30 hidden w-full rounded-[24px] border border-white/70 bg-white/92 p-2 shadow-glow backdrop-blur-xl">
+                    <button type="button" class="vendorOption flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-slate-50" data-id="northwind" data-name="Northwind Logistics" data-avatar="NL" data-address="221 Harbor Avenue, Seattle, WA 98121">
+                      <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white">NL</span>
+                      <span><span class="block text-sm font-semibold text-slate-900">Northwind Logistics</span><span class="block text-xs text-slate-500">221 Harbor Avenue, Seattle, WA 98121</span></span>
+                    </button>
+                    <button type="button" class="vendorOption flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-slate-50" data-id="atlas" data-name="Atlas Creative Co." data-avatar="AC" data-address="94 King Street, Toronto, ON M5V 1J6">
+                      <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-bold text-white">AC</span>
+                      <span><span class="block text-sm font-semibold text-slate-900">Atlas Creative Co.</span><span class="block text-xs text-slate-500">94 King Street, Toronto, ON M5V 1J6</span></span>
+                    </button>
+                    <button type="button" class="vendorOption flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-slate-50" data-id="solara" data-name="Solara Ventures" data-avatar="SV" data-address="12 Palm Crescent, Dubai Marina, Dubai">
+                      <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500 text-sm font-bold text-white">SV</span>
+                      <span><span class="block text-sm font-semibold text-slate-900">Solara Ventures</span><span class="block text-xs text-slate-500">12 Palm Crescent, Dubai Marina, Dubai</span></span>
+                    </button>
+                  </div>
+                </div>
+                <p id="vendorError" class="text-sm text-red-500"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-[30px] p-5 sm:p-6">
+            <div class="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p class="font-display text-lg font-bold tracking-tight">Line Items</p>
+                <p class="mt-1 text-sm text-slate-500">Drag rows, use suggestion-enabled descriptions, and keep totals in sync.</p>
+              </div>
+              <button id="addRowButton" type="button" class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                <i data-lucide="plus" class="h-4 w-4"></i>
+                Add Item
+              </button>
+            </div>
+            <div id="lineItemsShell" class="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/70" data-map-target="lineItems">
+              <div class="scrollbar-thin overflow-x-auto">
+                <table class="min-w-[820px] w-full">
+                  <thead class="bg-slate-50/90">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      <th class="px-4 py-3"></th>
+                      <th class="px-4 py-3">Description</th>
+                      <th class="px-4 py-3">Qty</th>
+                      <th class="px-4 py-3">Unit Price</th>
+                      <th class="px-4 py-3">Tax %</th>
+                      <th class="px-4 py-3">Total</th>
+                      <th class="px-4 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="lineItemsBody" class="divide-y divide-slate-100 bg-white"></tbody>
+                </table>
+              </div>
+            </div>
+            <p id="lineItemsError" class="mt-2 text-sm text-red-500"></p>
+            <datalist id="itemSuggestions">
+              <option value="Website redesign sprint"></option>
+              <option value="Brand identity audit"></option>
+              <option value="Product illustration system"></option>
+              <option value="Quarterly SEO optimization"></option>
+              <option value="Frontend component implementation"></option>
+              <option value="API integration workshop"></option>
+            </datalist>
+          </div>
+
+          <div class="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+            <div class="glass rounded-[30px] p-5 sm:p-6">
+              <div class="mb-5">
+                <p class="font-display text-lg font-bold tracking-tight">Notes & Terms</p>
+                <p class="mt-1 text-sm text-slate-500">Include payment instructions or delivery terms.</p>
+              </div>
+              <div id="notesShell" class="field-shell rounded-[24px] border border-slate-200/80 bg-white/80 p-4 transition" data-map-target="notes">
+                <textarea id="notes" rows="7" class="w-full resize-none bg-transparent text-sm leading-6 text-slate-700 outline-none placeholder:text-slate-400" placeholder="Payment due within 14 days. Late fees apply after the grace period."></textarea>
+              </div>
+            </div>
+            <div class="glass rounded-[30px] p-5 sm:p-6">
+              <div class="mb-5">
+                <p class="font-display text-lg font-bold tracking-tight">Summary</p>
+                <p class="mt-1 text-sm text-slate-500">Calculated in real time from the active line items.</p>
+              </div>
+              <div class="space-y-4" data-map-target="summary">
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-4"><span class="text-sm font-medium text-slate-500">Subtotal</span><span id="subtotalValue" class="font-display text-lg font-bold text-slate-900">$0.00</span></div>
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-4"><span class="text-sm font-medium text-slate-500">Tax Total</span><span id="taxTotalValue" class="font-display text-lg font-bold text-slate-900">$0.00</span></div>
+                <div class="space-y-2">
+                  <label for="discount" class="text-sm font-semibold text-slate-700">Discount</label>
+                  <div id="discountShell" class="field-shell rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 transition" data-map-target="summary">
+                    <input id="discount" type="number" min="0" step="0.01" value="0" class="w-full bg-transparent text-sm text-slate-900 outline-none" />
+                  </div>
+                  <p id="discountError" class="text-sm text-red-500"></p>
+                </div>
+                <div class="rounded-[24px] bg-slate-900 p-5 text-white">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm uppercase tracking-[0.2em] text-white/70">Grand Total</span>
+                    <span id="grandTotalValue" class="font-display text-2xl font-bold">$0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <button id="openPreviewButton" class="fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_rgba(15,23,42,0.3)] transition hover:bg-slate-800 lg:hidden">
+    <i data-lucide="file-text" class="h-4 w-4"></i>
+    Preview Document
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    const state = {
+      zoom: 1,
+      rotation: 0,
+      status: "draft",
+      selectedVendor: {
+        id: "northwind",
+        name: "Northwind Logistics",
+        avatar: "NL",
+        address: "221 Harbor Avenue, Seattle, WA 98121",
+      },
+      lineItems: [],
+      documentUrl: null,
+      documentKind: "mock",
+    };
+
+    const el = {
+      invoiceForm: document.getElementById("invoiceForm"),
+      invoiceNumber: document.getElementById("invoiceNumber"),
+      autoGenerateInvoice: document.getElementById("autoGenerateInvoice"),
+      issueDate: document.getElementById("issueDate"),
+      dueDate: document.getElementById("dueDate"),
+      currency: document.getElementById("currency"),
+      notes: document.getElementById("notes"),
+      discount: document.getElementById("discount"),
+      statusBadge: document.getElementById("statusBadge"),
+      previewStatus: document.getElementById("previewStatus"),
+      vendorButton: document.getElementById("vendorButton"),
+      vendorMenu: document.getElementById("vendorMenu"),
+      vendorLabel: document.getElementById("vendorLabel"),
+      vendorAddressLabel: document.getElementById("vendorAddressLabel"),
+      vendorAvatar: document.getElementById("vendorAvatar"),
+      lineItemsBody: document.getElementById("lineItemsBody"),
+      lineItemsError: document.getElementById("lineItemsError"),
+      addRowButton: document.getElementById("addRowButton"),
+      subtotalValue: document.getElementById("subtotalValue"),
+      taxTotalValue: document.getElementById("taxTotalValue"),
+      grandTotalValue: document.getElementById("grandTotalValue"),
+      previewInvoiceNumber: document.getElementById("previewInvoiceNumber"),
+      previewVendorName: document.getElementById("previewVendorName"),
+      previewVendorAddress: document.getElementById("previewVendorAddress"),
+      previewIssueDate: document.getElementById("previewIssueDate"),
+      previewDueDate: document.getElementById("previewDueDate"),
+      previewCurrency: document.getElementById("previewCurrency"),
+      previewLineItems: document.getElementById("previewLineItems"),
+      previewSubtotal: document.getElementById("previewSubtotal"),
+      previewTaxTotal: document.getElementById("previewTaxTotal"),
+      previewDiscount: document.getElementById("previewDiscount"),
+      previewGrandTotal: document.getElementById("previewGrandTotal"),
+      previewNotes: document.getElementById("previewNotes"),
+      openPreviewButton: document.getElementById("openPreviewButton"),
+      closePreviewButton: document.getElementById("closePreviewButton"),
+      previewSheet: document.getElementById("previewSheet"),
+      previewBackdrop: document.getElementById("previewBackdrop"),
+      documentStage: document.getElementById("documentStage"),
+      zoomLabel: document.getElementById("zoomLabel"),
+      documentInput: document.getElementById("documentInput"),
+      resetDocumentButton: document.getElementById("resetDocumentButton"),
+      rotateButton: document.getElementById("rotateButton"),
+      validateButton: document.getElementById("validateButton"),
+      mockViewer: document.getElementById("mockViewer"),
+      externalViewer: document.getElementById("externalViewer"),
+      pdfFrame: document.getElementById("pdfFrame"),
+      imageFrame: document.getElementById("imageFrame"),
+    };
+
+    const errorElements = {
+      invoiceNumber: document.getElementById("invoiceNumberError"),
+      issueDate: document.getElementById("issueDateError"),
+      dueDate: document.getElementById("dueDateError"),
+      vendor: document.getElementById("vendorError"),
+      lineItems: document.getElementById("lineItemsError"),
+      discount: document.getElementById("discountError"),
+    };
+
+    function createId() {
+      return `item-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function generateInvoiceNumber() {
+      const now = new Date();
+      return `INV-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return "Not set";
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date(value + "T00:00:00"));
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: el.currency.value || "USD",
+        minimumFractionDigits: 2,
+      }).format(value || 0);
+    }
+
+    function clampZoom(nextZoom) {
+      return Math.min(1.8, Math.max(0.6, nextZoom));
+    }
+
+    function applyViewerTransform() {
+      el.documentStage.style.transform = `scale(${state.zoom}) rotate(${state.rotation}deg)`;
+      el.zoomLabel.textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    function togglePreview(open) {
+      const shouldOpen = open ?? el.previewSheet.getAttribute("aria-hidden") === "true";
+      el.previewSheet.setAttribute("aria-hidden", String(!shouldOpen));
+      el.previewSheet.classList.toggle("translate-y-full", !shouldOpen);
+      el.previewSheet.classList.toggle("opacity-0", !shouldOpen);
+      el.previewSheet.classList.toggle("pointer-events-none", !shouldOpen);
+      document.body.classList.toggle("overflow-hidden", shouldOpen && window.innerWidth < 1024);
+    }
+
+    function setExternalDocument(kind, url) {
+      state.documentKind = kind;
+      state.documentUrl = url || null;
+      const isMock = kind === "mock";
+      el.mockViewer.classList.toggle("hidden", !isMock);
+      el.externalViewer.classList.toggle("hidden", isMock);
+      el.pdfFrame.classList.add("hidden");
+      el.imageFrame.classList.add("hidden");
+
+      if (kind === "pdf") {
+        el.pdfFrame.src = `${url}#toolbar=0&navpanes=0`;
+        el.pdfFrame.classList.remove("hidden");
+      }
+
+      if (kind === "image") {
+        el.imageFrame.src = url;
+        el.imageFrame.classList.remove("hidden");
+      }
+    }
+
+    function getLineItem(id) {
+      return state.lineItems.find((item) => item.id === id);
+    }
+
+    function highlightMap(target) {
+      document.querySelectorAll("[data-map-box]").forEach((box) => {
+        box.classList.toggle("active", box.dataset.mapBox === target);
+      });
+    }
+
+    function clearMapHighlights() {
+      document.querySelectorAll("[data-map-box]").forEach((box) => box.classList.remove("active"));
+    }
+
+    function syncPreview() {
+      el.previewInvoiceNumber.textContent = el.invoiceNumber.value || "INV-00000000-0000";
+      el.previewVendorName.textContent = state.selectedVendor.name || "Select a vendor";
+      el.previewVendorAddress.innerHTML = (state.selectedVendor.address || "Vendor address").replace(", ", "<br />");
+      el.previewIssueDate.textContent = formatDisplayDate(el.issueDate.value);
+      el.previewDueDate.textContent = formatDisplayDate(el.dueDate.value);
+      el.previewCurrency.textContent = el.currency.value;
+      el.previewNotes.textContent = el.notes.value.trim() || "Payment due within 14 days. Thank you for your business.";
+    }
+
+    function setStatus(status) {
+      state.status = status;
+      const label = status.charAt(0).toUpperCase() + status.slice(1);
+      el.statusBadge.dataset.state = status;
+      el.statusBadge.textContent = label;
+      el.previewStatus.dataset.state = status;
+      el.previewStatus.textContent = label;
+      document.querySelectorAll(".statusOption").forEach((button) => {
+        const active = button.dataset.status === status;
+        button.classList.toggle("bg-slate-900", active);
+        button.classList.toggle("text-white", active);
+        button.classList.toggle("border-slate-900", active);
+        button.classList.toggle("bg-white/80", !active);
+        button.classList.toggle("text-slate-600", !active);
+      });
+    }
+
+    function renderPreviewLineItems() {
+      el.previewLineItems.innerHTML = "";
+      state.lineItems.forEach((item) => {
+        const base = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+        const tax = base * (Number(item.taxRate || 0) / 100);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="px-4 py-3 text-slate-700">${item.description || "Untitled service"}</td>
+          <td class="px-4 py-3 text-right text-slate-500">${Number(item.quantity || 0)}</td>
+          <td class="px-4 py-3 text-right text-slate-500">${formatMoney(Number(item.unitPrice || 0))}</td>
+          <td class="px-4 py-3 text-right font-semibold text-slate-900">${formatMoney(base + tax)}</td>
+        `;
+        el.previewLineItems.appendChild(row);
+      });
+    }
+
+    function paintRowErrors() {
+      state.lineItems.forEach((item) => {
+        const row = el.lineItemsBody.querySelector(`[data-id="${item.id}"]`);
+        if (!row) return;
+        const descShell = row.querySelector("td:nth-child(2) > div");
+        const rowError = row.querySelector(".rowError");
+        const invalid = !item.description.trim() || Number(item.quantity) <= 0 || Number(item.unitPrice) < 0 || Number(item.taxRate) < 0;
+        descShell.classList.toggle("field-error", invalid);
+        rowError.textContent = invalid ? "Description is required and numeric values must be valid." : "";
+      });
+    }
+
+    function renderLineItems() {
+      el.lineItemsBody.innerHTML = "";
+      state.lineItems.forEach((item) => {
+        const base = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+        const tax = base * (Number(item.taxRate || 0) / 100);
+        const row = document.createElement("tr");
+        row.className = "align-top";
+        row.dataset.id = item.id;
+        row.innerHTML = `
+          <td class="px-4 py-4">
+            <button type="button" class="dragHandle inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-slate-50 text-slate-500 transition hover:bg-slate-100" aria-label="Reorder line item">
+              <i data-lucide="grip-vertical" class="h-4 w-4"></i>
+            </button>
+          </td>
+          <td class="px-4 py-4">
+            <div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-3">
+              <input data-key="description" value="${item.description.replace(/"/g, "&quot;")}" list="itemSuggestions" class="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400" placeholder="Describe the work or product" />
+            </div>
+            <p class="rowError mt-2 text-xs text-red-500"></p>
+          </td>
+          <td class="px-4 py-4"><div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-3"><input data-key="quantity" type="number" min="0" step="1" value="${item.quantity}" class="w-24 bg-transparent text-sm text-slate-900 outline-none" /></div></td>
+          <td class="px-4 py-4"><div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-3"><input data-key="unitPrice" type="number" min="0" step="0.01" value="${item.unitPrice}" class="w-28 bg-transparent text-sm text-slate-900 outline-none" /></div></td>
+          <td class="px-4 py-4"><div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-3"><input data-key="taxRate" type="number" min="0" step="0.01" value="${item.taxRate}" class="w-20 bg-transparent text-sm text-slate-900 outline-none" /></div></td>
+          <td class="px-4 py-4"><div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">${formatMoney(base + tax)}</div></td>
+          <td class="px-4 py-4">
+            <button type="button" class="removeRow inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white text-slate-500 transition hover:border-red-200 hover:text-red-500" aria-label="Remove line item">
+              <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>
+          </td>
+        `;
+
+        row.querySelectorAll("input").forEach((input) => {
+          input.addEventListener("input", (event) => {
+            const current = getLineItem(item.id);
+            const key = event.target.dataset.key;
+            if (!current) return;
+            current[key] = key === "description" ? event.target.value : Number(event.target.value);
+            renderLineItems();
+            computeTotals();
+            validateForm(true);
+          });
+          input.addEventListener("focus", () => highlightMap("lineItems"));
+          input.addEventListener("blur", clearMapHighlights);
+        });
+
+        row.querySelector(".removeRow").addEventListener("click", () => {
+          state.lineItems = state.lineItems.filter((entry) => entry.id !== item.id);
+          if (!state.lineItems.length) addLineItem();
+          renderLineItems();
+          computeTotals();
+          validateForm(true);
+        });
+
+        el.lineItemsBody.appendChild(row);
+      });
+
+      lucide.createIcons();
+      paintRowErrors();
+    }
+
+    function computeTotals() {
+      let subtotal = 0;
+      let taxTotal = 0;
+
+      state.lineItems.forEach((item) => {
+        const base = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+        const tax = base * (Number(item.taxRate || 0) / 100);
+        subtotal += base;
+        taxTotal += tax;
+      });
+
+      const discount = Number(el.discount.value || 0);
+      const grandTotal = Math.max(0, subtotal + taxTotal - discount);
+
+      el.subtotalValue.textContent = formatMoney(subtotal);
+      el.taxTotalValue.textContent = formatMoney(taxTotal);
+      el.grandTotalValue.textContent = formatMoney(grandTotal);
+
+      el.previewSubtotal.textContent = formatMoney(subtotal);
+      el.previewTaxTotal.textContent = formatMoney(taxTotal);
+      el.previewDiscount.textContent = formatMoney(discount);
+      el.previewGrandTotal.textContent = formatMoney(grandTotal);
+
+      renderPreviewLineItems();
+      syncPreview();
+    }
+
+    function addLineItem(values = {}) {
+      state.lineItems.push({
+        id: createId(),
+        description: values.description || "",
+        quantity: values.quantity ?? 1,
+        unitPrice: values.unitPrice ?? 0,
+        taxRate: values.taxRate ?? 0,
+      });
+      renderLineItems();
+      computeTotals();
+      validateForm(true);
+    }
+
+    function clearErrors() {
+      Object.values(errorElements).forEach((node) => {
+        node.textContent = "";
+      });
+      document.querySelectorAll(".field-error").forEach((node) => node.classList.remove("field-error"));
+      document.querySelectorAll(".rowError").forEach((node) => {
+        node.textContent = "";
+      });
+    }
+
+    function markFieldError(shellId, errorKey, message) {
+      const shell = document.getElementById(shellId);
+      if (shell) shell.classList.add("field-error");
+      if (errorElements[errorKey]) errorElements[errorKey].textContent = message;
+    }
+
+    function validateForm(silent = false) {
+      clearErrors();
+      let valid = true;
+
+      if (!el.invoiceNumber.value.trim()) {
+        valid = false;
+        markFieldError("invoiceNumberShell", "invoiceNumber", "Invoice number is required.");
+      }
+
+      if (!el.issueDate.value) {
+        valid = false;
+        markFieldError("issueDateShell", "issueDate", "Issue date is required.");
+      }
+
+      if (!el.dueDate.value) {
+        valid = false;
+        markFieldError("dueDateShell", "dueDate", "Due date is required.");
+      }
+
+      if (el.issueDate.value && el.dueDate.value && el.dueDate.value < el.issueDate.value) {
+        valid = false;
+        markFieldError("dueDateShell", "dueDate", "Due date cannot be earlier than issue date.");
+      }
+
+      if (!state.selectedVendor.name) {
+        valid = false;
+        markFieldError("vendorButton", "vendor", "Vendor selection is required.");
+      }
+
+      const hasValidLineItems = state.lineItems.length > 0 && state.lineItems.every((item) => {
+        return item.description.trim() && Number(item.quantity) > 0 && Number(item.unitPrice) >= 0 && Number(item.taxRate) >= 0;
+      });
+
+      if (!hasValidLineItems) {
+        valid = false;
+        errorElements.lineItems.textContent = "At least one complete line item is required.";
+        document.getElementById("lineItemsShell").classList.add("field-error");
+      }
+
+      const subtotal = state.lineItems.reduce((sum, item) => {
+        return sum + Number(item.quantity || 0) * Number(item.unitPrice || 0);
+      }, 0);
+
+      if (Number(el.discount.value || 0) > subtotal) {
+        valid = false;
+        markFieldError("discountShell", "discount", "Discount cannot exceed subtotal.");
+      }
+
+      paintRowErrors();
+
+      if (!silent && !valid) {
+        document.querySelector(".field-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      return valid;
+    }
+
+    function setVendor(vendor) {
+      state.selectedVendor = vendor;
+      el.vendorLabel.textContent = vendor.name;
+      el.vendorAddressLabel.textContent = vendor.address;
+      el.vendorAvatar.textContent = vendor.avatar;
+      el.vendorAvatar.className = "flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white";
+      el.vendorMenu.classList.add("hidden");
+      syncPreview();
+      validateForm(true);
+    }
+
+    function setDefaultDates() {
+      const today = new Date();
+      const due = new Date(today);
+      due.setDate(today.getDate() + 14);
+      el.issueDate.value = today.toISOString().slice(0, 10);
+      el.dueDate.value = due.toISOString().slice(0, 10);
+    }
+
+    function initializeSortable() {
+      new Sortable(el.lineItemsBody, {
+        animation: 180,
+        handle: ".dragHandle",
+        ghostClass: "bg-emerald-50",
+        onEnd: () => {
+          const orderedIds = Array.from(el.lineItemsBody.children).map((row) => row.dataset.id);
+          state.lineItems = orderedIds.map((id) => getLineItem(id)).filter(Boolean);
+          renderLineItems();
+          computeTotals();
+        },
+      });
+    }
+
+    document.querySelectorAll("[data-zoom]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.zoom = clampZoom(state.zoom + Number(button.dataset.zoom));
+        applyViewerTransform();
+      });
+    });
+
+    el.rotateButton.addEventListener("click", () => {
+      state.rotation = (state.rotation + 90) % 360;
+      applyViewerTransform();
+    });
+
+    el.documentInput.addEventListener("change", (event) => {
+      const [file] = event.target.files || [];
+      if (!file) return;
+      if (state.documentUrl) URL.revokeObjectURL(state.documentUrl);
+      const url = URL.createObjectURL(file);
+      setExternalDocument(file.type === "application/pdf" ? "pdf" : "image", url);
+    });
+
+    el.resetDocumentButton.addEventListener("click", () => {
+      if (state.documentUrl) URL.revokeObjectURL(state.documentUrl);
+      el.documentInput.value = "";
+      setExternalDocument("mock");
+    });
+
+    el.openPreviewButton.addEventListener("click", () => togglePreview(true));
+    el.closePreviewButton.addEventListener("click", () => togglePreview(false));
+    el.previewBackdrop.addEventListener("click", () => togglePreview(false));
+
+    el.autoGenerateInvoice.addEventListener("change", () => {
+      const auto = el.autoGenerateInvoice.checked;
+      el.invoiceNumber.disabled = auto;
+      el.invoiceNumber.classList.toggle("opacity-60", auto);
+      if (auto) el.invoiceNumber.value = generateInvoiceNumber();
+      syncPreview();
+      validateForm(true);
+    });
+
+    el.invoiceNumber.addEventListener("input", () => {
+      syncPreview();
+      validateForm(true);
+    });
+
+    [el.issueDate, el.dueDate, el.currency, el.notes, el.discount].forEach((input) => {
+      input.addEventListener("input", () => {
+        syncPreview();
+        computeTotals();
+        validateForm(true);
+      });
+    });
+
+    document.querySelectorAll(".statusOption").forEach((button) => {
+      button.addEventListener("click", () => setStatus(button.dataset.status));
+    });
+
+    document.querySelectorAll("[data-map-target]").forEach((node) => {
+      const target = node.dataset.mapTarget;
+      node.addEventListener("focusin", () => highlightMap(target));
+      node.addEventListener("focusout", () => {
+        requestAnimationFrame(() => {
+          if (!node.contains(document.activeElement)) clearMapHighlights();
+        });
+      });
+    });
+
+    el.vendorButton.addEventListener("click", () => {
+      el.vendorMenu.classList.toggle("hidden");
+      highlightMap("vendor");
+    });
+
+    document.querySelectorAll(".vendorOption").forEach((button) => {
+      button.addEventListener("click", () => {
+        setVendor({
+          id: button.dataset.id,
+          name: button.dataset.name,
+          avatar: button.dataset.avatar,
+          address: button.dataset.address,
+        });
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!el.vendorButton.contains(event.target) && !el.vendorMenu.contains(event.target)) {
+        el.vendorMenu.classList.add("hidden");
+      }
+    });
+
+    el.addRowButton.addEventListener("click", () => {
+      addLineItem({ description: "", quantity: 1, unitPrice: 0, taxRate: 0 });
+    });
+
+    el.validateButton.addEventListener("click", () => validateForm(false));
+    el.invoiceForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      validateForm(false);
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 1024) togglePreview(false);
+    });
+
+    function boot() {
+      el.invoiceNumber.value = generateInvoiceNumber();
+      el.invoiceNumber.disabled = true;
+      setDefaultDates();
+      el.notes.value = "Payment due within 14 days. Thank you for your business.";
+      setStatus("draft");
+      addLineItem({ description: "Website redesign sprint", quantity: 1, unitPrice: 3200, taxRate: 8 });
+      addLineItem({ description: "Frontend component implementation", quantity: 3, unitPrice: 450, taxRate: 8 });
+      renderLineItems();
+      initializeSortable();
+      syncPreview();
+      computeTotals();
+      setExternalDocument("mock");
+      applyViewerTransform();
+      validateForm(true);
+      lucide.createIcons();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

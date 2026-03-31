@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workspace | Architectural Ledger ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-dim": "#4e0309",
+                        "surface-variant": "#e1e3e3",
+                        "secondary-dim": "#3d566a",
+                        "secondary-fixed": "#cbe6ff",
+                        "surface-bright": "#fbf9f8",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005db5",
+                        "tertiary-fixed-dim": "#a0f0f0",
+                        "on-error": "#fff7f6",
+                        "tertiary": "#016a6a",
+                        "tertiary-container": "#aefffe",
+                        "background": "#fbf9f8",
+                        "surface-dim": "#d8dadb",
+                        "tertiary-dim": "#005d5d",
+                        "outline-variant": "#b0b2b2",
+                        "secondary-fixed-dim": "#bdd7f0",
+                        "surface-container-high": "#e8e8e8",
+                        "primary-container": "#d6e3ff",
+                        "error": "#9f403d",
+                        "on-primary": "#f6f7ff",
+                        "inverse-surface": "#0d0e0e",
+                        "on-secondary-fixed-variant": "#455e73",
+                        "on-surface": "#303333",
+                        "on-tertiary-container": "#006565",
+                        "secondary-container": "#cbe6ff",
+                        "on-tertiary-fixed-variant": "#107070",
+                        "tertiary-fixed": "#aefffe",
+                        "on-primary-fixed": "#003f7d",
+                        "on-primary-fixed-variant": "#005bb0",
+                        "surface": "#fbf9f8",
+                        "on-error-container": "#752121",
+                        "on-tertiary-fixed": "#005151",
+                        "outline": "#797b7b",
+                        "inverse-primary": "#5f9efb",
+                        "surface-container-low": "#f4f3f3",
+                        "on-primary-container": "#00519e",
+                        "primary-dim": "#0052a0",
+                        "secondary": "#496277",
+                        "error-container": "#fe8983",
+                        "primary-fixed": "#d6e3ff",
+                        "surface-container": "#eeeeee",
+                        "inverse-on-surface": "#9d9d9c",
+                        "on-background": "#303333",
+                        "on-secondary": "#f6f9ff",
+                        "on-secondary-container": "#3b5469",
+                        "primary-fixed-dim": "#bfd5ff",
+                        "on-secondary-fixed": "#294256",
+                        "surface-container-highest": "#e1e3e3",
+                        "on-surface-variant": "#5d5f60",
+                        "on-tertiary": "#e0fffe",
+                        "surface-tint": "#005db5"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-auto-rows: min-content;
+            gap: 1.5rem;
+        }
+        .widget-card {
+            cursor: grab;
+        }
+        .widget-card:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex h-screen overflow-hidden">
+<aside class="bg-slate-50 dark:bg-slate-950 h-screen w-20 flex flex-col border-r border-slate-200/50 dark:border-slate-800/50 flex-shrink-0">
+<div class="p-4 flex justify-center border-b border-slate-200/50">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary font-bold">AL</div>
+</div>
+<nav class="flex flex-col py-6 gap-6 items-center flex-grow overflow-y-auto">
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">dashboard</span></a>
+<a class="p-3 bg-blue-50 text-blue-700 rounded-xl" href="#"><span class="material-symbols-outlined text-2xl">receipt_long</span></a>
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">shopping_cart</span></a>
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">analytics</span></a>
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-2xl">settings</span></a>
+</nav>
+<div class="p-4 border-t border-slate-200">
+<img alt="User profile" class="w-10 h-10 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpiM89xHcfCQiN5f5Va3vOdBTT23i7TVA4h3LTd1ZSrV_VrDRA49O1phDAyqaLX_QSHjp7D6jg0QxJrYnMWMTYLGl76KAvSdd1G98TvNlhS5LPxP40OMYLUQs9YoGS3WMZ6hn3XUZjFMFMBhlHFBcB8UND5bbwWlP62hfJYwWC-l03E-_dSOtSMtKD-iMcGFQPdNKZ4vSHN1O8BTNxTG--yRryDs1ge1ldKLs9FtKmPJupQs0BLhO0B76nJp6j4b2YYExaeS5vPP4"/>
+</div>
+</aside>
+<main class="flex-grow flex flex-col min-w-0 bg-surface-container-low overflow-hidden">
+<header class="bg-white/80 backdrop-blur-md px-8 h-16 border-b border-outline-variant/15 flex items-center justify-between flex-shrink-0 z-30">
+<div class="flex items-center gap-4">
+<h2 class="text-lg font-extrabold font-headline text-on-surface">INV-2024-0892</h2>
+<span class="px-2.5 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full">DRAFT</span>
+<div class="h-6 w-px bg-outline-variant/30 mx-2"></div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">widgets</span>
+<span class="text-xs font-semibold uppercase tracking-tighter">Workspace Mode</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2 mr-4">
+<img class="w-8 h-8 rounded-full border-2 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAun92zKd3bAgKl8jvLtvmdkZUNUJreGSKrhun6MzflK7BACjCgfwbTaZHSyusUV1RoRLpaAtaCCGu24yBKPrrlGHuJTnKp3c3e1NVCD3uXrRox36W_Cw0KoS00A9yXAX-eJnzI7QLB7TSeoChofmdNKEGKxfes_E-TlIrruCCcmqoG6_NFLuzIEz2Qyq5bqg57Xz1Fy_RT37-u5El9v9X-YuYp7_eV7nfgbM9jimi1ghw4vuVxeh6y-g22gC60QwTMF3x0h8RPbDc"/>
+<div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500">+2</div>
+</div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-sm">send</span> Submit
+            </button>
+</div>
+</header>
+<div class="flex-grow overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+<div class="bg-tertiary/10 border-2 border-tertiary p-4 rounded-2xl flex flex-col gap-2 transition-transform hover:scale-[1.02] cursor-pointer">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="text-[10px] font-black uppercase text-tertiary">Received</span>
+<span class="text-xs text-tertiary/70 font-medium">Oct 23, 04:45 PM</span>
+</div>
+<div class="bg-primary border-2 border-primary p-4 rounded-2xl flex flex-col gap-2 shadow-xl shadow-primary/20 transition-transform hover:scale-[1.02] cursor-pointer ring-4 ring-primary-container">
+<span class="material-symbols-outlined text-on-primary">edit_document</span>
+<span class="text-[10px] font-black uppercase text-on-primary">Submitted</span>
+<span class="text-xs text-on-primary/70 font-medium">Oct 24, 09:15 AM</span>
+</div>
+<div class="bg-white border-2 border-dashed border-outline-variant/30 p-4 rounded-2xl flex flex-col gap-2 opacity-50 grayscale transition-transform hover:scale-[1.02] cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">verified</span>
+<span class="text-[10px] font-black uppercase text-on-surface-variant">Approved</span>
+<span class="text-xs text-on-surface-variant/70 font-medium">Pending...</span>
+</div>
+<div class="bg-white border-2 border-dashed border-outline-variant/30 p-4 rounded-2xl flex flex-col gap-2 opacity-50 grayscale transition-transform hover:scale-[1.02] cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">sync_alt</span>
+<span class="text-[10px] font-black uppercase text-on-surface-variant">Integrated</span>
+<span class="text-xs text-on-surface-variant/70 font-medium">Waiting...</span>
+</div>
+<div class="bg-white border-2 border-dashed border-outline-variant/30 p-4 rounded-2xl flex flex-col gap-2 opacity-50 grayscale transition-transform hover:scale-[1.02] cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">post_add</span>
+<span class="text-[10px] font-black uppercase text-on-surface-variant">Posted</span>
+<span class="text-xs text-on-surface-variant/70 font-medium">Waiting...</span>
+</div>
+<div class="bg-white border-2 border-dashed border-outline-variant/30 p-4 rounded-2xl flex flex-col gap-2 opacity-50 grayscale transition-transform hover:scale-[1.02] cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant">payments</span>
+<span class="text-[10px] font-black uppercase text-on-surface-variant">Paid</span>
+<span class="text-xs text-on-surface-variant/70 font-medium">Waiting...</span>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 auto-rows-auto items-start">
+<div class="xl:col-span-4 bg-white rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden widget-card">
+<div class="p-5 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">info</span>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Header Fields</h3>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm">drag_indicator</span>
+</div>
+<div class="p-6 space-y-5">
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Subsidiary</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded">ArchiCorp North America LLC</p>
+</div>
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Supplier Name</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded flex justify-between items-center">
+                            Vertex Engineering Group
+                            <span class="material-symbols-outlined text-sm">open_in_new</span>
+</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Invoice #</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded">INV-2024-0892</p>
+</div>
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Currency</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded">USD</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Date</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded">Oct 24, 2024</p>
+</div>
+<div class="space-y-1">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Due Date</label>
+<p class="text-sm font-semibold text-on-surface bg-slate-50 p-2 rounded">Nov 23, 2024</p>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<label class="text-[9px] font-bold text-on-surface-variant uppercase">Total Amount</label>
+<p class="text-2xl font-black text-primary">$14,250.00</p>
+</div>
+</div>
+</div>
+<div class="xl:col-span-5 bg-white rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden flex flex-col h-[520px] widget-card">
+<div class="p-4 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">description</span>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Document Preview</h3>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1.5 hover:bg-surface-container-highest rounded transition-colors material-symbols-outlined text-sm">fullscreen</button>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm">drag_indicator</span>
+</div>
+</div>
+<div class="flex-grow bg-slate-100 overflow-hidden relative">
+<div class="absolute inset-4 bg-white shadow-xl overflow-y-auto custom-scrollbar p-6">
+<img alt="Invoice document" class="w-full h-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK85fek2soLHn9hZstAYgdzlD0DjFx2wjOWJyUy1fbEQCIywVjCiVldR1u4U8Ntlvbe5gfyxdG2YakoxTE-U0lSvHcou47GYptKWbv_KfD5-zUg3FNwy4lCgiXlnPmeql9PR7StqpOoQcrReL6kBbxPSSUBAuF0fRI6hEzUyK4ULhXW1zFbKD9hQLIWJm9u1XVoaRLvyjLl8t1CZqPAQUBPDQfzmL8X58wbv9e0giuv-jYZYgd2flhmEAKgGPkMz45i1Yqu-5c-fs"/>
+<div class="mt-4 space-y-4">
+<div class="h-4 w-1/3 bg-slate-50 rounded"></div>
+<div class="h-10 w-full bg-slate-50/50 rounded"></div>
+<div class="h-10 w-full bg-slate-50/50 rounded"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="xl:col-span-3 bg-error-container/10 border-2 border-error/20 rounded-3xl p-6 flex flex-col gap-4 widget-card">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-error rounded-xl flex items-center justify-center text-on-error">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<h3 class="text-sm font-extrabold text-on-error-container">Variance Alert</h3>
+</div>
+<p class="text-xs text-on-error-container leading-relaxed">
+                    Invoice total exceeds PO amount by <span class="font-bold">$250.00</span>. Justification required for submission.
+                </p>
+<button class="mt-auto w-full py-2.5 bg-error text-on-error text-[10px] font-black uppercase tracking-widest rounded-lg">Fix Now</button>
+</div>
+<div class="xl:col-span-8 bg-white rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden widget-card">
+<div class="p-5 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">list_alt</span>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Line Items</h3>
+</div>
+<button class="text-primary text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add</span> New Row
+                    </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50/50 text-[9px] font-black text-on-surface-variant uppercase tracking-widest">
+<tr>
+<th class="px-6 py-3">Description</th>
+<th class="px-6 py-3 text-center w-20">Qty</th>
+<th class="px-6 py-3 text-right">Price</th>
+<th class="px-6 py-3 text-right">Amount</th>
+<th class="px-6 py-3">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 text-sm">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="font-bold text-on-surface">6400 Professional Svcs</div>
+<div class="text-[10px] text-on-surface-variant">Architecture &amp; Planning Fees</div>
+</td>
+<td class="px-6 py-4 text-center font-medium">1.0</td>
+<td class="px-6 py-4 text-right text-xs">$8,500.00</td>
+<td class="px-6 py-4 text-right font-bold">$8,500.00</td>
+<td class="px-6 py-4">
+<span class="px-2 py-0.5 bg-tertiary-container text-on-tertiary-container text-[10px] font-black rounded uppercase">Monthly</span>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="font-bold text-on-surface">6210 Software Subs</div>
+<div class="text-[10px] text-on-surface-variant">Cloud Infrastructure License</div>
+</td>
+<td class="px-6 py-4 text-center font-medium">5.0</td>
+<td class="px-6 py-4 text-right text-xs">$1,150.00</td>
+<td class="px-6 py-4 text-right font-bold">$5,750.00</td>
+<td class="px-6 py-4">
+<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[10px] font-black rounded uppercase">Immediate</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="xl:col-span-4 bg-white rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden widget-card">
+<div class="p-5 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">verified_user</span>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Approval Chain</h3>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img alt="Sarah" class="w-12 h-12 rounded-2xl border-2 border-tertiary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAun92zKd3bAgKl8jvLtvmdkZUNUJreGSKrhun6MzflK7BACjCgfwbTaZHSyusUV1RoRLpaAtaCCGu24yBKPrrlGHuJTnKp3c3e1NVCD3uXrRox36W_Cw0KoS00A9yXAX-eJnzI7QLB7TSeoChofmdNKEGKxfes_E-TlIrruCCcmqoG6_NFLuzIEz2Qyq5bqg57Xz1Fy_RT37-u5El9v9X-YuYp7_eV7nfgbM9jimi1ghw4vuVxeh6y-g22gC60QwTMF3x0h8RPbDc"/>
+<span class="material-symbols-outlined absolute -top-2 -right-2 text-xs bg-tertiary text-on-tertiary rounded-full p-1" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-grow">
+<span class="text-xs font-bold block text-on-surface">Sarah Jenkins</span>
+<span class="text-[9px] font-black text-tertiary uppercase">Approved • Oct 25</span>
+</div>
+</div>
+<div class="flex items-center gap-4 opacity-50">
+<div class="relative">
+<img alt="Mark" class="w-12 h-12 rounded-2xl border-2 border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyw9fNl0e4ZyJckBk9rzwJ9nJylp_s0pSt6ub1E11KjhbsCIwVrmbJFOodm29I-gOrLRfgBe7yBEAzvrwoIEmVT42bryQetrRVVGn_vuy5QtdMJPSZ2o8VQmBwG_entoz8s1Rig1eVakxNFQtv4wfUJU_XFUXjgctqTEQe8ZYYgSqIXIjWOFqJmhM6u4Gea7VYPztUGgE0_GCloQzyi1GPN6vKQXczMS48oDKGoqfzVaaL4w6Niv6e77SC3I_cwpt1wX76CFjXMvY"/>
+</div>
+<div class="flex-grow">
+<span class="text-xs font-bold block text-on-surface">Mark Thompson</span>
+<span class="text-[9px] font-black text-on-surface-variant uppercase tracking-widest">Pending (VP Finance)</span>
+</div>
+</div>
+</div>
+</div>
+<div class="xl:col-span-12 bg-white rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden widget-card">
+<div class="p-5 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">history</span>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Audit History</h3>
+</div>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex gap-4">
+<div class="w-1 h-full bg-tertiary/20 rounded-full"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">System Match</p>
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Auto-matched with PO-9821</p>
+<span class="text-[9px] text-on-surface-variant/60 font-medium">Oct 24 • 09:15 AM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-1 h-full bg-tertiary/20 rounded-full"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">OCR Extraction</p>
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Fields extracted from PDF</p>
+<span class="text-[9px] text-on-surface-variant/60 font-medium">Oct 24 • 09:12 AM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-1 h-full bg-tertiary/20 rounded-full"></div>
+<div>
+<p class="text-xs font-bold text-on-surface">Mailroom Receipt</p>
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Inbound mail document received</p>
+<span class="text-[9px] text-on-surface-variant/60 font-medium">Oct 23 • 04:45 PM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-8 right-8 flex flex-col gap-3 z-50">
+<button class="w-14 h-14 bg-error text-on-error rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform group relative">
+<span class="material-symbols-outlined">block</span>
+<span class="absolute right-16 bg-error text-on-error px-3 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest whitespace-nowrap">Hold Invoice</span>
+</button>
+<button class="w-14 h-14 bg-white text-on-surface-variant rounded-full shadow-2xl border border-outline-variant/10 flex items-center justify-center hover:scale-110 transition-transform group relative">
+<span class="material-symbols-outlined">save</span>
+<span class="absolute right-16 bg-white border border-outline-variant/10 text-on-surface px-3 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest whitespace-nowrap">Save Progress</span>
+</button>
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform group relative ring-4 ring-primary/20">
+<span class="material-symbols-outlined">send</span>
+<span class="absolute right-16 bg-primary text-on-primary px-3 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest whitespace-nowrap">Submit for Approval</span>
+</button>
+</div>
+
+</body></html>

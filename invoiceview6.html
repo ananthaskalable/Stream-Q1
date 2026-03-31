@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Invoice Console | Architectural Ledger ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-dim": "#4e0309",
+                        "surface-variant": "#e1e3e3",
+                        "secondary-dim": "#3d566a",
+                        "secondary-fixed": "#cbe6ff",
+                        "surface-bright": "#fbf9f8",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005db5",
+                        "tertiary-fixed-dim": "#a0f0f0",
+                        "on-error": "#fff7f6",
+                        "tertiary": "#016a6a",
+                        "tertiary-container": "#aefffe",
+                        "background": "#fbf9f8",
+                        "surface-dim": "#d8dadb",
+                        "tertiary-dim": "#005d5d",
+                        "outline-variant": "#b0b2b2",
+                        "secondary-fixed-dim": "#bdd7f0",
+                        "surface-container-high": "#e8e8e8",
+                        "primary-container": "#d6e3ff",
+                        "error": "#9f403d",
+                        "on-primary": "#f6f7ff",
+                        "inverse-surface": "#0d0e0e",
+                        "on-secondary-fixed-variant": "#455e73",
+                        "on-surface": "#303333",
+                        "on-tertiary-container": "#006565",
+                        "secondary-container": "#cbe6ff",
+                        "on-tertiary-fixed-variant": "#107070",
+                        "tertiary-fixed": "#aefffe",
+                        "on-primary-fixed": "#003f7d",
+                        "on-primary-fixed-variant": "#005bb0",
+                        "surface": "#fbf9f8",
+                        "on-error-container": "#752121",
+                        "on-tertiary-fixed": "#005151",
+                        "outline": "#797b7b",
+                        "inverse-primary": "#5f9efb",
+                        "surface-container-low": "#f4f3f3",
+                        "on-primary-container": "#00519e",
+                        "primary-dim": "#0052a0",
+                        "secondary": "#496277",
+                        "error-container": "#fe8983",
+                        "primary-fixed": "#d6e3ff",
+                        "surface-container": "#eeeeee",
+                        "inverse-on-surface": "#9d9d9c",
+                        "on-background": "#303333",
+                        "on-secondary": "#f6f9ff",
+                        "on-secondary-container": "#3b5469",
+                        "primary-fixed-dim": "#bfd5ff",
+                        "on-secondary-fixed": "#294256",
+                        "surface-container-highest": "#e1e3e3",
+                        "on-surface-variant": "#5d5f60",
+                        "on-tertiary": "#e0fffe",
+                        "surface-tint": "#005db5"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }.peek-container:hover .peek-panel {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen overflow-hidden">
+<aside class="bg-slate-50 dark:bg-slate-950 h-screen w-16 lg:w-20 flex flex-col border-r border-outline-variant/20 sticky top-0 z-50">
+<div class="p-4 flex justify-center">
+<div class="w-10 h-10 bg-primary text-on-primary rounded flex items-center justify-center font-bold font-headline">AL</div>
+</div>
+<nav class="flex flex-col py-4 gap-4 flex-grow items-center">
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">dashboard</span></a>
+<a class="p-3 bg-blue-50 text-primary rounded-lg" href="#"><span class="material-symbols-outlined">receipt_long</span></a>
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">shopping_cart</span></a>
+<a class="p-3 text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">analytics</span></a>
+</nav>
+<div class="p-4 border-t border-outline-variant/10 flex flex-col items-center gap-4">
+<button class="material-symbols-outlined text-slate-400">settings</button>
+<img alt="User" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpiM89xHcfCQiN5f5Va3vOdBTT23i7TVA4h3LTd1ZSrV_VrDRA49O1phDAyqaLX_QSHjp7D6jg0QxJrYnMWMTYLGl76KAvSdd1G98TvNlhS5LPxP40OMYLUQs9YoGS3WMZ6hn3XUZjFMFMBhlHFBcB8UND5bbwWlP62hfJYwWC-l03E-_dSOtSMtKD-iMcGFQPdNKZ4vSHN1O8BTNxTG--yRryDs1ge1ldKLs9FtKmPJupQs0BLhO0B76nJp6j4b2YYExaeS5vPP4"/>
+</div>
+</aside>
+<main class="flex-grow flex flex-col min-w-0 bg-white">
+<header class="h-14 border-b border-outline-variant/20 flex items-center justify-between px-6 bg-surface-container-lowest shrink-0">
+<div class="flex items-center gap-6">
+<h2 class="text-sm font-bold font-headline text-on-surface">INV-2024-0892</h2>
+<div class="flex items-center gap-1.5 h-6">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-[10px] font-bold text-tertiary uppercase">Received</span>
+<span class="material-symbols-outlined text-xs text-outline">chevron_right</span>
+<div class="w-2 h-2 rounded-full bg-primary ring-4 ring-primary/10"></div>
+<span class="text-[10px] font-bold text-primary uppercase">Submitted</span>
+<span class="material-symbols-outlined text-xs text-outline">chevron_right</span>
+<div class="w-2 h-2 rounded-full bg-outline-variant/30"></div>
+<span class="text-[10px] font-bold text-outline uppercase">Approved</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded uppercase">Draft Status</span>
+<div class="h-8 w-px bg-outline-variant/20 mx-2"></div>
+<button class="material-symbols-outlined text-slate-500 text-lg">search</button>
+<button class="material-symbols-outlined text-slate-500 text-lg">notifications</button>
+</div>
+</header>
+<div class="flex-grow flex flex-col overflow-hidden relative">
+<div class="bg-surface-container-low px-4 py-2 border-b border-outline-variant/20 flex flex-wrap gap-2 items-center shrink-0">
+<div class="group relative flex-grow min-w-[200px]">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Subsidiary</label>
+<input class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium" type="text" value="ArchiCorp North America LLC"/>
+</div>
+<div class="group relative flex-grow min-w-[200px]">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Supplier Name</label>
+<input class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium" type="text" value="Vertex Engineering Group"/>
+</div>
+<div class="group relative w-32">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Invoice #</label>
+<input class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium" type="text" value="INV-2024-0892"/>
+</div>
+<div class="group relative w-32">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Currency</label>
+<select class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium appearance-none">
+<option>USD</option>
+<option>EUR</option>
+</select>
+</div>
+<div class="group relative w-32">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Date</label>
+<input class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium" type="date" value="2024-10-24"/>
+</div>
+<div class="group relative w-32">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Due Date</label>
+<input class="w-full bg-white border border-outline-variant/30 rounded px-3 pt-3 pb-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary font-medium" type="date" value="2024-11-23"/>
+</div>
+<div class="group relative w-40">
+<label class="absolute left-3 top-1 text-[8px] font-bold text-on-surface-variant uppercase pointer-events-none">Total Amount</label>
+<input class="w-full bg-primary-container border-none rounded px-3 pt-3 pb-1 text-xs font-bold text-on-primary-container focus:ring-1 focus:ring-primary" type="text" value="$14,250.00"/>
+</div>
+<div class="peek-container relative ml-auto">
+<div class="w-12 h-14 bg-white border border-outline-variant/40 rounded shadow-sm flex items-center justify-center cursor-pointer hover:border-primary transition-all overflow-hidden group">
+<img class="w-full h-full object-cover opacity-50 group-hover:opacity-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK85fek2soLHn9hZstAYgdzlD0DjFx2wjOWJyUy1fbEQCIywVjCiVldR1u4U8Ntlvbe5gfyxdG2YakoxTE-U0lSvHcou47GYptKWbv_KfD5-zUg3FNwy4lCgiXlnPmeql9PR7StqpOoQcrReL6kBbxPSSUBAuF0fRI6hEzUyK4ULhXW1zFbKD9hQLIWJm9u1XVoaRLvyjLl8t1CZqPAQUBPDQfzmL8X58wbv9e0giuv-jYZYgd2flhmEAKgGPkMz45i1Yqu-5c-fs"/>
+</div>
+<div class="peek-panel hidden absolute top-full right-0 mt-2 z-[100] w-[400px] bg-white shadow-2xl rounded-xl border border-outline-variant/20 overflow-hidden">
+<div class="bg-surface-container p-3 flex justify-between items-center border-b">
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Document Preview</span>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-sm">zoom_in</span>
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+</div>
+</div>
+<div class="p-2 bg-slate-100">
+<img alt="Invoice Preview" class="w-full h-auto rounded shadow-inner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK85fek2soLHn9hZstAYgdzlD0DjFx2wjOWJyUy1fbEQCIywVjCiVldR1u4U8Ntlvbe5gfyxdG2YakoxTE-U0lSvHcou47GYptKWbv_KfD5-zUg3FNwy4lCgiXlnPmeql9PR7StqpOoQcrReL6kBbxPSSUBAuF0fRI6hEzUyK4ULhXW1zFbKD9hQLIWJm9u1XVoaRLvyjLl8t1CZqPAQUBPDQfzmL8X58wbv9e0giuv-jYZYgd2flhmEAKgGPkMz45i1Yqu-5c-fs"/>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-grow overflow-auto relative">
+<table class="w-full text-left border-separate border-spacing-0">
+<thead class="sticky top-0 bg-white z-10">
+<tr class="bg-surface-container text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+<th class="px-6 py-3 border-b border-outline-variant/10">Item ID / GL Account</th>
+<th class="px-4 py-3 border-b border-outline-variant/10 text-center">Qty</th>
+<th class="px-6 py-3 border-b border-outline-variant/10 text-right">Unit Price</th>
+<th class="px-6 py-3 border-b border-outline-variant/10 text-right">Amount</th>
+<th class="px-6 py-3 border-b border-outline-variant/10">Amortization</th>
+<th class="px-6 py-3 border-b border-outline-variant/10">Project / Dept</th>
+<th class="px-4 py-3 border-b border-outline-variant/10 w-10 text-center"><button class="material-symbols-outlined text-sm">settings</button></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10 text-sm">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="font-semibold text-on-surface">6400 Professional Svcs</div>
+<div class="text-[10px] text-on-surface-variant">Architecture &amp; Planning Fees</div>
+</td>
+<td class="px-4 py-4 text-center font-medium">1.0</td>
+<td class="px-6 py-4 text-right font-medium">$8,500.00</td>
+<td class="px-6 py-4 text-right font-bold text-primary">$8,500.00</td>
+<td class="px-6 py-4">
+<span class="px-2 py-0.5 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold rounded">MONTHLY_12</span>
+</td>
+<td class="px-6 py-4 text-xs text-on-surface-variant font-medium">HQ_RENOVATION_24</td>
+<td class="px-4 py-4 text-center">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="font-semibold text-on-surface">6210 Software Subs</div>
+<div class="text-[10px] text-on-surface-variant">Cloud Infrastructure License</div>
+</td>
+<td class="px-4 py-4 text-center font-medium">5.0</td>
+<td class="px-6 py-4 text-right font-medium">$1,150.00</td>
+<td class="px-6 py-4 text-right font-bold text-primary">$5,750.00</td>
+<td class="px-6 py-4">
+<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold rounded">IMMEDIATE</span>
+</td>
+<td class="px-6 py-4 text-xs text-on-surface-variant font-medium">IT_INFRA_CORE</td>
+<td class="px-4 py-4 text-center">
+<button class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">more_vert</button>
+</td>
+</tr>
+<tr class="bg-surface-container-low/30 h-14"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr class="bg-surface-container-low/30 h-14"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr class="bg-surface-container-low/30 h-14 border-b border-outline-variant/10">
+<td class="px-6 py-4" colspan="7">
+<button class="text-primary text-xs font-bold flex items-center gap-2 hover:bg-primary/10 px-3 py-1.5 rounded transition-all">
+<span class="material-symbols-outlined text-sm">add</span> ADD NEW LINE ITEM
+                            </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="h-48 border-t border-outline-variant/20 flex shrink-0 bg-surface-container-low overflow-hidden">
+<div class="w-1/3 border-r border-outline-variant/10 p-4 space-y-3 overflow-y-auto">
+<h3 class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Approval Chain</h3>
+<div class="flex items-center gap-3">
+<img alt="Sarah" class="w-8 h-8 rounded-full border-2 border-tertiary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAun92zKd3bAgKl8jvLtvmdkZUNUJreGSKrhun6MzflK7BACjCgfwbTaZHSyusUV1RoRLpaAtaCCGu24yBKPrrlGHuJTnKp3c3e1NVCD3uXrRox36W_Cw0KoS00A9yXAX-eJnzI7QLB7TSeoChofmdNKEGKxfes_E-TlIrruCCcmqoG6_NFLuzIEz2Qyq5bqg57Xz1Fy_RT37-u5El9v9X-YuYp7_eV7nfgbM9jimi1ghw4vuVxeh6y-g22gC60QwTMF3x0h8RPbDc"/>
+<div>
+<div class="text-xs font-bold">Sarah Jenkins</div>
+<div class="text-[9px] text-tertiary font-bold uppercase">Approved</div>
+</div>
+</div>
+<div class="flex items-center gap-3 opacity-60">
+<img alt="Mark" class="w-8 h-8 rounded-full border-2 border-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyw9fNl0e4ZyJckBk9rzwJ9nJylp_s0pSt6ub1E11KjhbsCIwVrmbJFOodm29I-gOrLRfgBe7yBEAzvrwoIEmVT42bryQetrRVVGn_vuy5QtdMJPSZ2o8VQmBwG_entoz8s1Rig1eVakxNFQtv4wfUJU_XFUXjgctqTEQe8ZYYgSqIXIjWOFqJmhM6u4Gea7VYPztUGgE0_GCloQzyi1GPN6vKQXczMS48oDKGoqfzVaaL4w6Niv6e77SC3I_cwpt1wX76CFjXMvY"/>
+<div>
+<div class="text-xs font-bold">Mark Thompson</div>
+<div class="text-[9px] text-on-surface-variant font-bold uppercase">Pending</div>
+</div>
+</div>
+</div>
+<div class="w-1/3 border-r border-outline-variant/10 p-4 space-y-2 overflow-y-auto">
+<h3 class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Recent Activity</h3>
+<div class="flex gap-2">
+<div class="w-1 bg-tertiary rounded-full"></div>
+<div>
+<p class="text-[11px] text-on-surface leading-tight"><span class="font-bold">System</span> matched with PO-9821</p>
+<p class="text-[8px] text-on-surface-variant">Oct 24, 09:15 AM</p>
+</div>
+</div>
+<div class="flex gap-2">
+<div class="w-1 bg-primary rounded-full"></div>
+<div>
+<p class="text-[11px] text-on-surface leading-tight"><span class="font-bold">OCR</span> extracted 12 fields</p>
+<p class="text-[8px] text-on-surface-variant">Oct 24, 09:12 AM</p>
+</div>
+</div>
+</div>
+<div class="w-1/3 p-4 flex flex-col justify-between">
+<div class="bg-error-container/15 border border-error/20 p-3 rounded-lg flex gap-3">
+<span class="material-symbols-outlined text-error text-lg" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<p class="text-[10px] font-bold text-on-error-container uppercase">Variance Detected</p>
+<p class="text-[9px] text-on-error-container/80 leading-tight">Total exceeds PO amount by $250.00. Justification required.</p>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="text-on-surface-variant">Subtotal</span>
+<span class="font-medium">$14,250.00</span>
+</div>
+<div class="flex justify-between text-sm font-bold border-t border-outline-variant/10 pt-1">
+<span class="text-on-surface">Invoice Total</span>
+<span class="text-primary">$14,250.00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white/95 backdrop-blur-md border-t border-outline-variant/20 px-8 py-3 flex items-center justify-between z-40">
+<div class="flex items-center gap-6">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase transition-colors">
+<span class="material-symbols-outlined text-sm">attachment</span>
+<span>(3) Files</span>
+</button>
+<div class="h-6 w-px bg-outline-variant/20"></div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary text-[10px] font-bold uppercase transition-colors">
+<span class="material-symbols-outlined text-sm">comment</span>
+<span>History</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 text-xs font-bold text-error hover:bg-error/10 rounded uppercase transition-all">Hold</button>
+<button class="px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-surface-container-highest rounded uppercase transition-all">Save</button>
+<button class="px-4 py-2 text-xs font-bold text-primary border border-primary/20 hover:bg-primary/5 rounded uppercase transition-all">Route</button>
+<button class="ml-2 px-6 py-2.5 bg-primary text-on-primary text-xs font-extrabold rounded shadow-lg hover:shadow-primary/30 transition-all flex items-center gap-2 uppercase tracking-widest">
+                Submit Invoice <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</main>
+
+</body></html>

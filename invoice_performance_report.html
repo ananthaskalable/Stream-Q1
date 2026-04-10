@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkalableStream - AI Invoice Processing Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f1923;--card:#162231;--card2:#1a2b3d;--green:#00e5a0;--yellow:#ffb347;--orange:#ff6b6b;--accent2:#00c4ff;--purple:#a78bfa;--pink:#ff6b9d;--text:#e8edf2;--text2:#8899aa;--border:#253545;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--font);padding:20px;min-height:100vh}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.header svg{width:28px;height:28px;flex-shrink:0}
+.header h1{font-size:15px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--green)}
+.header span{color:var(--text2);font-size:13px;margin-left:auto;white-space:nowrap}
+.tabs{display:flex;gap:4px;margin-bottom:24px}
+.tab{padding:10px 24px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:.5px;background:var(--card);color:var(--text2);border:1px solid var(--border);border-bottom:none;transition:.2s}
+.tab.active{background:var(--card2);color:var(--green);border-color:var(--green);box-shadow:0 -2px 8px rgba(0,229,160,.1)}
+.tab:hover:not(.active){color:var(--text)}
+.client-panel{display:none}.client-panel.active{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.kpi .val{font-family:var(--mono);font-size:26px;font-weight:700}.kpi .val span{font-size:13px;color:var(--text2)}
+.kpi .label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:12px}
+.bar-group{margin-bottom:10px}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.bar-label span:first-child{color:var(--text2)}.bar-label span:last-child{font-family:var(--mono);font-weight:600}
+.bar-track{height:22px;background:var(--bg);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 6px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);font-size:10px}
+td{padding:7px 6px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
+tr:hover td{background:rgba(0,229,160,.03)}
+td:first-child{font-family:var(--font);color:var(--text2)}
+.sla-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.sla-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.sla-card h4{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px}
+.donut-wrap{position:relative;width:100px;height:100px;margin:0 auto 8px}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-center .pct{font-family:var(--mono);font-size:16px;font-weight:700}
+.donut-center .sub{font-size:9px;color:var(--text2)}
+.sla-breakdown{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.6}
+.sla-thresholds{font-size:10px;color:var(--text2);opacity:.7;margin-top:4px;font-style:italic}
+.sla-legend{display:flex;justify-content:center;gap:14px;margin-bottom:20px;font-size:11px;color:var(--text2)}
+.sla-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.summary{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:20px}
+.summary h3{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:8px}
+.summary p{font-size:13px;line-height:1.7}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:var(--mono);margin:0 2px}
+.tag.g{background:rgba(0,229,160,.15);color:var(--green)}.tag.y{background:rgba(255,179,71,.15);color:var(--yellow)}.tag.o{background:rgba(255,107,107,.15);color:var(--orange)}
+.note{font-size:11px;color:var(--yellow);margin-bottom:12px;font-style:italic}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}.sla-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="header">
+  <svg viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="var(--green)" stroke-width="1.5"/><polygon points="14,6 22,10 22,18 14,22 6,18 6,10" fill="var(--green)" opacity=".15"/><circle cx="14" cy="14" r="3" fill="var(--green)"/></svg>
+  <h1>Skalable Stream – AI Invoice Processing Performance</h1>
+  <span>Report Generated: Apr 09, 2026</span>
+</div>
+<div class="tabs" id="tabs"></div>
+<div id="panels"></div>
+<script>
+const clients=[
+  {name:"OOMA",invoices:50,
+   stats:{ImageCon:{count:50,avg:5.18,p50:3.50,p75:7.00,p95:14.55,p99:17.02,min:1,max:18},OCR:{count:50,avg:17.10,p50:16.00,p75:19.75,p95:27.55,p99:33.08,min:10,max:37},Vendor:{count:50,avg:23.76,p50:22.50,p75:25.00,p95:34.00,p99:34.51,min:16,max:35},GL:{count:15,avg:0.53,p50:0.00,p75:0.00,p95:2.40,p99:6.88,min:0,max:8},All:{count:50,avg:48.28,p50:46.50,p75:56.00,p95:63.55,p99:71.63,min:31,max:78}},
+   sla:{ImageCon:{green:88.0,yellow:12.0,orange:0.0,gn:44,yn:6,on:0,t:50},OCR:{green:98.0,yellow:2.0,orange:0.0,gn:49,yn:1,on:0,t:50},Vendor:{green:0.0,yellow:22.0,orange:78.0,gn:0,yn:11,on:39,t:50},GL:{green:100.0,yellow:0.0,orange:0.0,gn:15,yn:0,on:0,t:15}}},
+  {name:"MILAN",invoices:49,note:"Excluding InvoicesRefId 64604",
+   stats:{ImageCon:{count:49,avg:5.47,p50:2.00,p75:8.00,p95:14.00,p99:19.16,min:2,max:23},OCR:{count:49,avg:18.02,p50:17.00,p75:20.00,p95:27.60,p99:34.24,min:12,max:40},Vendor:{count:49,avg:16.20,p50:16.00,p75:19.00,p95:21.60,p99:26.56,min:10,max:28},GL:{count:34,avg:8.03,p50:8.00,p75:9.00,p95:12.70,p99:14.67,min:5,max:15},All:{count:49,avg:47.78,p50:48.00,p75:54.00,p95:64.00,p99:73.28,min:32,max:80}},
+   sla:{ImageCon:{green:79.6,yellow:18.4,orange:2.0,gn:39,yn:9,on:1,t:49},OCR:{green:98.0,yellow:2.0,orange:0.0,gn:48,yn:1,on:0,t:49},Vendor:{green:6.1,yellow:85.7,orange:8.2,gn:3,yn:42,on:4,t:49},GL:{green:82.4,yellow:17.6,orange:0.0,gn:28,yn:6,on:0,t:34}}},
+  {name:"USAPROP",invoices:50,
+   stats:{ImageCon:{count:50,avg:3.58,p50:3.00,p75:3.00,p95:6.00,p99:19.24,min:2,max:31},OCR:{count:50,avg:18.80,p50:16.00,p75:21.75,p95:31.10,p99:39.59,min:12,max:44},Vendor:{count:50,avg:14.58,p50:14.00,p75:15.00,p95:20.10,p99:28.08,min:11,max:32},GL:{count:9,avg:5.22,p50:5.00,p75:5.00,p95:7.60,p99:7.92,min:3,max:8},All:{count:50,avg:38.76,p50:36.00,p75:41.00,p95:57.20,p99:68.08,min:27,max:72}},
+   sla:{ImageCon:{green:98.0,yellow:0.0,orange:2.0,gn:49,yn:0,on:1,t:50},OCR:{green:94.0,yellow:4.0,orange:2.0,gn:47,yn:2,on:1,t:50},Vendor:{green:0.0,yellow:94.0,orange:6.0,gn:0,yn:47,on:3,t:50},GL:{green:100.0,yellow:0.0,orange:0.0,gn:9,yn:0,on:0,t:9}}}
+];
+const slaT={ImageCon:{g:10,y:20},OCR:{g:30,y:40},Vendor:{g:10,y:20},GL:{g:10,y:20}};
+const barC={ImageCon:'#00e5a0',OCR:'#00c4ff',Vendor:'#ffb347',GL:'#a78bfa'};
+const labels={ImageCon:'IMG Con',OCR:'OCR',Vendor:'Vendor Map',GL:'GL Code'};
+
+function donutSVG(g,y,o){
+  const r=40,c=2*Math.PI*r;
+  const gL=(g/100)*c,yL=(y/100)*c,oL=(o/100)*c;
+  let a='';
+  if(g>0)a+=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="#00e5a0" stroke-width="9" stroke-dasharray="${gL} ${c-gL}" stroke-dashoffset="0"/>`;
+  if(y>0)a+=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="#ffb347" stroke-width="9" stroke-dasharray="${yL} ${c-yL}" stroke-dashoffset="${-gL}"/>`;
+  if(o>0)a+=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="#ff6b6b" stroke-width="9" stroke-dasharray="${oL} ${c-oL}" stroke-dashoffset="${-(gL+yL)}"/>`;
+  if(g===0&&y===0&&o===0)a=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="#253545" stroke-width="9"/>`;
+  return `<svg viewBox="0 0 100 100">${a}</svg>`;
+}
+
+function build(c){
+  const s=c.stats, svcs=['ImageCon','OCR','Vendor','GL'].filter(k=>s[k]);
+  const mxA=Math.max(...svcs.map(k=>s[k].avg)), mxP=Math.max(...svcs.map(k=>s[k].p95));
+  const bn=svcs.slice().sort((a,b)=>s[b].avg-s[a].avg)[0];
+  let h='';
+  if(c.note)h+=`<div class="note">⚠ ${c.note}</div>`;
+  h+=`<div class="kpi-row">
+    <div class="kpi"><div class="val">${s.All.avg}<span>s</span></div><div class="label">Avg Time Taken</div></div>
+    <div class="kpi"><div class="val">${s.All.p50}<span>s</span></div><div class="label">P50</div></div>
+    <div class="kpi"><div class="val">${s.All.p75}<span>s</span></div><div class="label">P75</div></div>
+    <div class="kpi"><div class="val">${s.All.p95}<span>s</span></div><div class="label">P95</div></div>
+    <div class="kpi"><div class="val">${s.All.p99}<span>s</span></div><div class="label">P99</div></div>
+  </div>`;
+  // Bottleneck grids
+  h+=`<div class="grid"><div class="card"><h3>Avg Bottleneck Analysis</h3>`;
+  svcs.forEach(k=>{const p=(s[k].avg/s.All.avg*100).toFixed(1);h+=`<div class="bar-group"><div class="bar-label"><span>${labels[k]}</span><span>${s[k].avg}s <span style="color:var(--text2);font-weight:400">(${p}%)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${(s[k].avg/mxA*100).toFixed(0)}%;background:${barC[k]}"></div></div></div>`;});
+  h+=`<div class="bar-group" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="bar-label"><span style="color:var(--text)">Total</span><span style="color:var(--text)">${s.All.avg}s</span></div><div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#00e5a0,#00c4ff,#ffb347,#a78bfa)"></div></div></div></div>`;
+  h+=`<div class="card"><h3>P95 Bottleneck Analysis</h3>`;
+  svcs.forEach(k=>{const p=(s[k].p95/s.All.p95*100).toFixed(1);h+=`<div class="bar-group"><div class="bar-label"><span>${labels[k]}</span><span>${s[k].p95}s <span style="color:var(--text2);font-weight:400">(${p}%)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${(s[k].p95/mxP*100).toFixed(0)}%;background:${barC[k]}"></div></div></div>`;});
+  h+=`<div class="bar-group" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="bar-label"><span style="color:var(--text)">Total</span><span style="color:var(--text)">${s.All.p95}s</span></div><div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#00e5a0,#00c4ff,#ffb347,#a78bfa)"></div></div></div></div></div>`;
+  // Table
+  h+=`<div class="card" style="margin-bottom:20px"><h3>AI Invoice Processing by Service</h3><table><tr><th>Activity</th><th>#ID</th><th>AVG</th><th>P50</th><th>P75</th><th>P95</th><th>P99</th><th>Min</th><th>Max</th></tr>`;
+  svcs.forEach(k=>{h+=`<tr><td>${labels[k]}</td><td>${s[k].count}</td><td>${s[k].avg}</td><td>${s[k].p50}</td><td>${s[k].p75}</td><td>${s[k].p95}</td><td>${s[k].p99}</td><td>${s[k].min}</td><td>${s[k].max}</td></tr>`;});
+  h+=`<tr style="font-weight:700"><td style="color:var(--text)">Total</td><td>${s.All.count}</td><td>${s.All.avg}</td><td>${s.All.p50}</td><td>${s.All.p75}</td><td>${s.All.p95}</td><td>${s.All.p99}</td><td>${s.All.min}</td><td>${s.All.max}</td></tr></table></div>`;
+  // SLA
+  h+=`<div style="margin-bottom:20px"><h3 style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:14px">SLA Compliance</h3><div class="sla-grid">`;
+  svcs.forEach(k=>{
+    const sl=c.sla[k],th=slaT[k];
+    h+=`<div class="sla-card"><h4>${labels[k]}</h4><div class="donut-wrap">${donutSVG(sl.green,sl.yellow,sl.orange)}<div class="donut-center"><span class="pct" style="color:${sl.green>=80?'#00e5a0':sl.green>=50?'#ffb347':'#ff6b6b'}">${sl.green}%</span><span class="sub">green</span></div></div><div class="sla-breakdown"><span style="color:#00e5a0">● ${sl.gn} Green</span> · <span style="color:#ffb347">● ${sl.yn} Yellow</span> · <span style="color:#ff6b6b">● ${sl.on} Orange</span></div><div class="sla-thresholds">≤${th.g}s green · ≤${th.y}s yellow · >${th.y}s orange</div></div>`;
+  });
+  h+=`</div><div class="sla-legend"><span><span class="dot" style="background:#00e5a0"></span>Green (within threshold)</span><span><span class="dot" style="background:#ffb347"></span>Yellow (approaching limit)</span><span><span class="dot" style="background:#ff6b6b"></span>Orange (exceeded)</span></div></div>`;
+  // Summary
+  h+=`<div class="summary"><h3>Key Insights – ${c.name}</h3><p>Analyzed <strong>${c.invoices}</strong> invoices. Average end-to-end: <span class="tag ${s.All.avg<45?'g':s.All.avg<60?'y':'o'}">${s.All.avg}s</span>. Primary bottleneck: <strong>${labels[bn]}</strong> at <span class="tag y">${s[bn].avg}s avg</span> (${(s[bn].avg/s.All.avg*100).toFixed(0)}% of total).<br><strong>SLA:</strong> `;
+  svcs.forEach((k,i)=>{const sl=c.sla[k],st=sl.green>=90?'g':sl.green>=50?'y':'o';h+=`${labels[k]} <span class="tag ${st}">${sl.green}% green</span>${i<svcs.length-1?' · ':''}`;});
+  if(c.sla.Vendor&&c.sla.Vendor.green<10)h+=`<br>⚠ <strong>Vendor Map</strong> critical — only <span class="tag o">${c.sla.Vendor.green}%</span> within green SLA (≤${slaT.Vendor.g}s).`;
+  svcs.forEach(k=>{if(s[k].count<c.invoices*0.5)h+=`<br>ℹ ${labels[k]} active on only <strong>${s[k].count}/${c.invoices}</strong> invoices (${(s[k].count/c.invoices*100).toFixed(0)}%).`;});
+  h+=`</p></div>`;
+  return h;
+}
+const tabsEl=document.getElementById('tabs'),panelsEl=document.getElementById('panels');
+clients.forEach((c,i)=>{
+  const tab=document.createElement('div');tab.className='tab'+(i===0?' active':'');tab.textContent=c.name;
+  tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.client-panel').forEach(p=>p.classList.remove('active'));tab.classList.add('active');document.getElementById('panel-'+i).classList.add('active');};
+  tabsEl.appendChild(tab);
+  const panel=document.createElement('div');panel.className='client-panel'+(i===0?' active':'');panel.id='panel-'+i;panel.innerHTML=build(c);panelsEl.appendChild(panel);
+});
+</script>
+</body>
+</html>
